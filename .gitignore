@@ -1,0 +1,26 @@
+# Dart
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+
+# Fichiers générés Dart
+*.g.dart
+
+# Tests
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Données locales de l'application
+data/tasks.json

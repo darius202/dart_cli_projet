@@ -1,0 +1,9 @@
+name: dart_cli_projet
+description: Projet dans le cadre de ma formation FlutterFire
+
+environment: 
+  sdk: '>=3.0.0 <4.0.0'
+
+dev_dependencies:
+  test: ^1.31.0
+  
