@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../models/task.dart';
-import 'repository.dart';
+import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 
-class TaskRepository implements Repository<Task> {
+import '../models/task.dart';
+
+class TaskRepository implements RepositoryInterface<Task> {
  final String path;
 
 

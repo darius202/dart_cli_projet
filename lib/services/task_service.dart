@@ -1,11 +1,11 @@
-import 'package:dart_cli_projet/repositories/repository.dart';
+import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 
 import '../exceptions/task_exception.dart';
 import '../models/task.dart';
 
 class TaskService {
 
-  final Repository<Task> repository;
+  final RepositoryInterface<Task> repository;
 
   TaskService(this.repository);
 
@@ -29,16 +29,20 @@ class TaskService {
 
   Future<void> delete(int index) async {
 
-    final tasks = await repository.getAll();
+  final tasks = await repository.getAll();
 
-    if (index >= tasks.length) {
-      throw TaskException("Task not found");
-    }
+  if(index < 0 || index >= tasks.length){
 
-    tasks.removeAt(index);
+    throw TaskException(
+      "Cette tâche n'existe pas",
+    );
 
-    await repository.addItems(tasks);
   }
+
+  tasks.removeAt(index);
+  await repository.addItems(tasks);
+
+}
 
   Future<List<Task>> listByPriority() async {
 

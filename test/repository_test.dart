@@ -1,14 +1,14 @@
+import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 import 'package:test/test.dart';
 
 import 'package:dart_cli_projet/enums/priority.dart';
 import 'package:dart_cli_projet/models/task.dart';
 
-import 'package:dart_cli_projet/repositories/repository.dart';
-import 'package:dart_cli_projet/services/task_service.dart';
+  import 'package:dart_cli_projet/services/task_service.dart';
 
 
 
-class FakeRepository implements Repository<Task> {
+class FakeRepository implements RepositoryInterface<Task> {
 
 
   final List<Task> tasks = [];
