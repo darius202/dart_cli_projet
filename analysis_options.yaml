@@ -1,0 +1,10 @@
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+
+
+linter:
+  rules:
+    avoid_print: false
+    prefer_single_quotes: true
+    always_declare_return_types: true
