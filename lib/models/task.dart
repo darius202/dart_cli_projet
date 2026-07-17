@@ -1,8 +1,9 @@
 import 'package:dart_cli_projet/enums/priority.dart';
+import 'package:dart_cli_projet/interfaces/json_serializable.dart';
 
 import 'base_task.dart';
 
-class Task extends BaseTask {
+class Task extends BaseTask implements JsonSerializable {
   Task({
     required super.title,
     required super.priority,

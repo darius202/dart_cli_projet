@@ -88,3 +88,21 @@ Concepts Dart mis en pratique :
 - **Génériques** : `RepositoryInterface<T>` / `TaskRepository implements RepositoryInterface<Task>`.
 - **Exceptions personnalisées** : `TaskException`, levée par `TaskService` et interceptée par `TaskCLI` pour afficher un message clair sans faire planter l'application.
 - **Tests unitaires** : modèles, service (cas nominaux et cas d'erreur) et persistance réelle du `TaskRepository` sur disque.
+
+### Pourquoi ces choix
+
+- **Repository + Service** : `TaskRepository` isole entièrement la lecture/écriture du fichier JSON derrière `RepositoryInterface<Task>`. `TaskService` ne connaît que ce contrat, pas le détail du stockage. En pratique, cela permet de tester `TaskService` avec un `FakeRepository` en mémoire (voir `test/task_service_test.dart`) sans toucher au disque, tout en gardant un test dédié pour la vraie persistance (`test/task_repository_test.dart`).
+- **`addItems` remplace toute la liste** : le contrat `RepositoryInterface<T>.addItems` réécrit l'intégralité du fichier avec la liste fournie plutôt que d'ajouter des éléments. `TaskService` récupère toujours la liste complète via `getAll()`, la modifie en mémoire, puis la repasse en entier à `addItems`. C'est une persistance simple, sans dépendances externes, adaptée au volume de données d'une todo-list personnelle.
+- **`UrgentTask`** impose `Priority.high` dès la construction : il illustre l'héritage en spécialisant `Task` (mêmes champs, contrainte métier en plus) plutôt qu'en dupliquant du code.
+
+### Limites connues et pistes d'amélioration
+
+- Pas de verrouillage de fichier : deux instances de l'application lancées en parallèle peuvent se marcher dessus lors de l'écriture. Non problématique pour un usage CLI mono-utilisateur, mais à traiter avant un usage concurrent.
+- La saisie utilisateur se fait via une boucle `stdin.readLineSync()` maison. Une prochaine itération pourrait s'appuyer sur le package [`args`](https://pub.dev/packages/args) pour supporter des commandes non interactives (`dart run -- add --title ... --priority high`).
+- La persistance JSON réécrit le fichier entier à chaque opération ; suffisant ici, mais à revoir (ex. base SQLite) si le volume de tâches devenait important.
+
+## Dépannage
+
+- **`FormatException` au démarrage** : le fichier `data/tasks.json` a été modifié/corrompu manuellement. Supprimez-le (ou videz-le en `[]`) ; il sera recréé automatiquement au prochain lancement.
+- **`dart pub get` échoue** : vérifiez que la version du SDK Dart installée satisfait la contrainte `>=3.0.0 <4.0.0` du `pubspec.yaml`.
+- **Un index de tâche est refusé avec "Cette tâche n'existe pas"** : listez les tâches (option `2`) pour retrouver l'index courant, la liste change après chaque suppression.
