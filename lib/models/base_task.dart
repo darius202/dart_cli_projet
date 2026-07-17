@@ -20,4 +20,11 @@ abstract class BaseTask implements JsonSerializable {
   void markAsCompleted() {
     completed = true;
   }
+
+  String describe() {
+    final status = completed ? '✅' : '❌';
+    final due = dueDate?.toIso8601String().split('T').first ?? '-';
+
+    return '$title | ${priority.name} | $status | $due';
+  }
 }

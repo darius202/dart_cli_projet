@@ -17,9 +17,7 @@ class TaskService {
   Future<void> complete(int index) async {
     final tasks = await repository.getAll();
 
-    if (index < 0 || index >= tasks.length) {
-      throw TaskException("Cette tâche n'existe pas");
-    }
+    _checkIndex(index, tasks.length);
 
     tasks[index].completed = true;
 
@@ -29,14 +27,20 @@ class TaskService {
   Future<void> delete(int index) async {
     final tasks = await repository.getAll();
 
-    if (index < 0 || index >= tasks.length) {
-      throw TaskException(
-        "Cette tâche n'existe pas",
-      );
-    }
+    _checkIndex(index, tasks.length);
 
     tasks.removeAt(index);
     await repository.addItems(tasks);
+  }
+
+  void _checkIndex(int index, int length) {
+    if (index < 0) {
+      throw InvalidIndexException();
+    }
+
+    if (index >= length) {
+      throw TaskNotFoundException();
+    }
   }
 
   Future<List<Task>> listByPriority() async {

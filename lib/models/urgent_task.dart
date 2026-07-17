@@ -6,4 +6,7 @@ class UrgentTask extends Task {
     required super.title,
     super.dueDate,
   }) : super(priority: Priority.high);
+
+  @override
+  String describe() => '🚨 URGENT — ${super.describe()}';
 }

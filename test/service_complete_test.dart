@@ -21,7 +21,7 @@ class FakeRepository implements RepositoryInterface<Task> {
 }
 
 void main() {
-  test('Lève une TaskException pour un index inexistant', () async {
+  test('Lève une TaskNotFoundException pour un index inexistant', () async {
     final repository = FakeRepository();
     final service = TaskService(repository);
 
@@ -31,11 +31,11 @@ void main() {
 
     expect(
       () => service.complete(5),
-      throwsA(isA<TaskException>()),
+      throwsA(isA<TaskNotFoundException>()),
     );
   });
 
-  test('Lève une TaskException pour un index négatif', () async {
+  test('Lève une InvalidIndexException pour un index négatif', () async {
     final repository = FakeRepository();
     final service = TaskService(repository);
 
@@ -45,7 +45,7 @@ void main() {
 
     expect(
       () => service.complete(-1),
-      throwsA(isA<TaskException>()),
+      throwsA(isA<InvalidIndexException>()),
     );
   });
 }

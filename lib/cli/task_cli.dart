@@ -117,11 +117,7 @@ class TaskCLI {
     }
 
     for (int i = 0; i < tasks.length; i++) {
-      final task = tasks[i];
-
-      print('$i - ${task.title} | ${task.priority.name} | '
-          "${task.completed ? '✅' : '❌'} | "
-          "${task.dueDate?.toIso8601String().split('T').first ?? '-'}");
+      print('$i - ${tasks[i].describe()}');
     }
   }
 
