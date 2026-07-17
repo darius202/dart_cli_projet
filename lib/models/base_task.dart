@@ -1,9 +1,7 @@
 import '../enums/priority.dart';
 import '../interfaces/json_serializable.dart';
 
-
 abstract class BaseTask implements JsonSerializable {
-
   String title;
 
   Priority priority;
@@ -12,7 +10,6 @@ abstract class BaseTask implements JsonSerializable {
 
   bool completed;
 
-
   BaseTask({
     required this.title,
     required this.priority,
@@ -20,9 +17,7 @@ abstract class BaseTask implements JsonSerializable {
     this.completed = false,
   });
 
-
   void markAsCompleted() {
     completed = true;
   }
-
 }
