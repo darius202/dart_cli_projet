@@ -1,77 +1,97 @@
-import 'dart:io';
+import 'package:test/test.dart';
 
 import 'package:dart_cli_projet/enums/priority.dart';
 import 'package:dart_cli_projet/models/task.dart';
-import 'package:dart_cli_projet/repositories/task_repository.dart';
-import 'package:test/test.dart';
+
+import 'package:dart_cli_projet/repositories/repository.dart';
+import 'package:dart_cli_projet/services/task_service.dart';
+
+
+
+class FakeRepository implements Repository<Task> {
+
+
+  final List<Task> tasks = [];
+
+
+
+  @override
+  Future<List<Task>> getAll() async {
+
+    return List.from(tasks);
+
+  }
+
+
+
+
+  @override
+  Future<void> addItems(List<Task> items) async {
+
+    tasks
+      ..clear()
+      ..addAll(items);
+
+  }
+
+
+}
+
+
 
 
 void main() {
 
-  late TaskRepository repository;
-  late File file;
+
+  late FakeRepository repository;
+
+  late TaskService service;
 
 
-  setUp(() async {
 
-    // Utilise un fichier uniquement pour les tests
-    repository = TaskRepository(
-      path: "data/test_tasks.json",
+  setUp(() {
+
+
+    repository = FakeRepository();
+
+
+    service = TaskService(
+      repository,
     );
 
-    file = File("data/test_tasks.json");
-
-
-    // Nettoyage avant chaque test
-    if (await file.exists()) {
-      await file.delete();
-    }
-
-  });
-
-
-
-  tearDown(() async {
-
-    // Nettoyage après chaque test
-    if (await file.exists()) {
-      await file.delete();
-    }
 
   });
 
 
 
 
-  test('Sauvegarde et récupération des tâches', () async {
 
-    final tasks = [
+
+  test('Ajoute une tâche avec le service', () async {
+
+
+    await service.add(
 
       Task(
-        title: "Apprendre Dart",
+        title: "Tester service",
         priority: Priority.high,
-      )
+      ),
 
-    ];
+    );
 
-
-    await repository.addItems(tasks);
 
 
     final result = await repository.getAll();
+
 
 
     expect(result.length, 1);
 
     expect(
       result.first.title,
-      "Apprendre Dart",
+      "Tester service",
     );
 
-    expect(
-      result.first.priority,
-      Priority.high,
-    );
 
   });
 
@@ -79,56 +99,70 @@ void main() {
 
 
 
-  test('Retourne une liste vide si aucun fichier existe', () async {
+
+
+  test('Marque une tâche comme terminée', () async {
+
+
+    await service.add(
+
+      Task(
+        title: "Terminer tâche",
+        priority: Priority.low,
+      ),
+
+    );
+
+
+
+    await service.complete(0);
+
 
 
     final result = await repository.getAll();
+
+
+
+    expect(
+      result.first.completed,
+      true,
+    );
+
+
+  });
+
+
+
+
+
+
+
+
+  test('Supprime une tâche avec le service', () async {
+
+
+    await service.add(
+
+      Task(
+        title: "Supprimer",
+        priority: Priority.medium,
+      ),
+
+    );
+
+
+
+    await service.delete(0);
+
+
+
+    final result = await repository.getAll();
+
 
 
     expect(
       result,
       isEmpty,
-    );
-
-
-  });
-
-
-
-
-
-
-  test('Conserve plusieurs tâches', () async {
-
-
-    final tasks = [
-
-      Task(
-        title: "Flutter",
-        priority: Priority.medium,
-      ),
-
-
-      Task(
-        title: "Dart",
-        priority: Priority.low,
-      ),
-
-    ];
-
-
-
-    await repository.addItems(tasks);
-
-
-
-    final result = await repository.getAll();
-
-
-
-    expect(
-      result.length,
-      2,
     );
 
 

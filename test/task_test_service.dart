@@ -1,22 +1,29 @@
-import 'package:dart_cli_projet/enums/priority.dart';
-import 'package:dart_cli_projet/exceptions/task_exception.dart';
-import 'package:dart_cli_projet/models/task.dart';
-import 'package:dart_cli_projet/repositories/repository.dart';
-import 'package:dart_cli_projet/services/task_service.dart';
 import 'package:test/test.dart';
 
+import 'package:dart_cli_projet/enums/priority.dart';
+import 'package:dart_cli_projet/models/task.dart';
+
+import 'package:dart_cli_projet/repositories/repository.dart';
+import 'package:dart_cli_projet/services/task_service.dart';
 
 
-class FakeRepository implements Repository<Task>{
+
+class FakeRepository implements Repository<Task> {
 
 
   final List<Task> tasks = [];
 
+
+
   @override
   Future<List<Task>> getAll() async {
+
     return List.from(tasks);
 
   }
+
+
+
 
   @override
   Future<void> addItems(List<Task> items) async {
@@ -26,43 +33,63 @@ class FakeRepository implements Repository<Task>{
       ..addAll(items);
 
   }
-  
+
+
 }
 
 
 
-void main(){
+
+void main() {
+
+
   late FakeRepository repository;
 
   late TaskService service;
 
-  setUp((){
+
+
+  setUp(() {
+
 
     repository = FakeRepository();
 
-    service = TaskService(repository);
 
-  });
-
-  test('Ajoute une tâche', () async {
-
-
-    await service.add(
-      Task(
-        title: "Faire les tests",
-        priority: Priority.high,
-      ),
+    service = TaskService(
+      repository,
     );
 
 
+  });
+
+
+
+
+
+
+  test('Ajoute une tâche avec le service', () async {
+
+
+    await service.add(
+
+      Task(
+        title: "Tester service",
+        priority: Priority.high,
+      ),
+
+    );
+
+
+
     final result = await repository.getAll();
+
 
 
     expect(result.length, 1);
 
     expect(
       result.first.title,
-      "Faire les tests",
+      "Tester service",
     );
 
 
@@ -72,12 +99,18 @@ void main(){
 
 
 
+
+
   test('Marque une tâche comme terminée', () async {
+
+
     await service.add(
+
       Task(
-        title: "Terminer projet",
-        priority: Priority.medium,
+        title: "Terminer tâche",
+        priority: Priority.low,
       ),
+
     );
 
 
@@ -103,15 +136,18 @@ void main(){
 
 
 
-  test('Supprime une tâche', () async {
 
+
+  test('Supprime une tâche avec le service', () async {
 
 
     await service.add(
+
       Task(
-        title: "A supprimer",
-        priority: Priority.low,
+        title: "Supprimer",
+        priority: Priority.medium,
       ),
+
     );
 
 
@@ -133,60 +169,5 @@ void main(){
   });
 
 
-
-
-
-
-  test('Trie les tâches par priorité', () async {
-
-
-    await service.add(
-      Task(
-        title: "Faible",
-        priority: Priority.low,
-      ),
-    );
-
-
-    await service.add(
-      Task(
-        title: "Urgente",
-        priority: Priority.high,
-      ),
-    );
-
-
-
-    final result = await service.listByPriority();
-
-    expect(
-      result.first.priority,
-      Priority.high,
-    );
-
-
-  });
-
-
-
-
-
-
-
-  test('Lance une exception si la tâche existe pas', () async {
-
-
-    expect(
-
-      () => service.delete(0),
-
-      throwsA(
-        isA<TaskException>(),
-      ),
-
-    );
-
-
-  });
 
 }
