@@ -5,7 +5,15 @@ import '../models/task.dart';
 import 'repository.dart';
 
 class TaskRepository implements Repository<Task> {
- final File file = File("data/tasks.json");
+ final String path;
+
+
+  TaskRepository({
+    this.path = "data/tasks.json",
+  });
+
+
+  File get file => File(path);
 
   @override
   Future<List<Task>> getAll() async {

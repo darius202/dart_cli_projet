@@ -12,26 +12,46 @@ void main() {
   late File file;
 
 
-  setUp(() {
-    repository = TaskRepository();
-    file = File("data/tasks.json");
-  });
+  setUp(() async {
+
+    // Utilise un fichier uniquement pour les tests
+    repository = TaskRepository(
+      path: "data/test_tasks.json",
+    );
+
+    file = File("data/test_tasks.json");
 
 
-  tearDown(() async {
+    // Nettoyage avant chaque test
     if (await file.exists()) {
       await file.delete();
     }
+
   });
+
+
+
+  tearDown(() async {
+
+    // Nettoyage après chaque test
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+  });
+
+
 
 
   test('Sauvegarde et récupération des tâches', () async {
 
     final tasks = [
+
       Task(
         title: "Apprendre Dart",
         priority: Priority.high,
       )
+
     ];
 
 
@@ -42,27 +62,39 @@ void main() {
 
 
     expect(result.length, 1);
-    expect(result.first.title, "Apprendre Dart");
-    expect(result.first.priority, Priority.high);
+
+    expect(
+      result.first.title,
+      "Apprendre Dart",
+    );
+
+    expect(
+      result.first.priority,
+      Priority.high,
+    );
 
   });
+
+
 
 
 
   test('Retourne une liste vide si aucun fichier existe', () async {
 
 
-    if(await file.exists()){
-      await file.delete();
-    }
-
-
     final result = await repository.getAll();
 
 
-    expect(result, isEmpty);
+    expect(
+      result,
+      isEmpty,
+    );
+
 
   });
+
+
+
 
 
 
@@ -76,6 +108,7 @@ void main() {
         priority: Priority.medium,
       ),
 
+
       Task(
         title: "Dart",
         priority: Priority.low,
@@ -84,13 +117,20 @@ void main() {
     ];
 
 
+
     await repository.addItems(tasks);
+
 
 
     final result = await repository.getAll();
 
 
-    expect(result.length, 2);
+
+    expect(
+      result.length,
+      2,
+    );
+
 
   });
 
