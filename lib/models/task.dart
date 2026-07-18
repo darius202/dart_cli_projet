@@ -14,10 +14,8 @@ class Task extends BaseTask implements JsonSerializable {
   @override
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
-      'priority': priority.name,
-      'dueDate': dueDate?.toIso8601String(),
-      'completed': completed
+      'type': 'task',
+      ...commonFields(),
     };
   }
 

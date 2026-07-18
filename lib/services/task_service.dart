@@ -1,17 +1,15 @@
 import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 
 import '../exceptions/task_exception.dart';
-import '../models/task.dart';
+import '../models/base_task.dart';
 
 class TaskService {
-  final RepositoryInterface<Task> repository;
+  final RepositoryInterface<BaseTask> repository;
 
   TaskService(this.repository);
 
-  Future<void> add(Task task) async {
-    final tasks = await repository.getAll();
-    tasks.add(task);
-    await repository.addItems(tasks);
+  Future<void> add(BaseTask task) async {
+    await repository.addItems([task]);
   }
 
   Future<void> complete(int index) async {
@@ -21,7 +19,7 @@ class TaskService {
 
     tasks[index].completed = true;
 
-    await repository.addItems(tasks);
+    await repository.saveAll(tasks);
   }
 
   Future<void> delete(int index) async {
@@ -30,7 +28,7 @@ class TaskService {
     _checkIndex(index, tasks.length);
 
     tasks.removeAt(index);
-    await repository.addItems(tasks);
+    await repository.saveAll(tasks);
   }
 
   void _checkIndex(int index, int length) {
@@ -43,7 +41,7 @@ class TaskService {
     }
   }
 
-  Future<List<Task>> listByPriority() async {
+  Future<List<BaseTask>> listByPriority() async {
     final tasks = await repository.getAll();
 
     tasks.sort((a, b) => b.priority.index.compareTo(a.priority.index));
@@ -51,7 +49,7 @@ class TaskService {
     return tasks;
   }
 
-  Future<List<Task>> listByDate() async {
+  Future<List<BaseTask>> listByDate() async {
     final tasks = await repository.getAll();
 
     tasks.sort((a, b) {

@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 
+import '../models/base_task.dart';
 import '../models/task.dart';
+import '../models/urgent_task.dart';
 
-class TaskRepository implements RepositoryInterface<Task> {
+class TaskRepository implements RepositoryInterface<BaseTask> {
   final String path;
 
   TaskRepository({
@@ -15,7 +17,7 @@ class TaskRepository implements RepositoryInterface<Task> {
   File get file => File(path);
 
   @override
-  Future<List<Task>> getAll() async {
+  Future<List<BaseTask>> getAll() async {
     if (!await file.exists()) {
       await file.create(recursive: true);
       await file.writeAsString('[]');
@@ -25,11 +27,18 @@ class TaskRepository implements RepositoryInterface<Task> {
 
     final jsonList = jsonDecode(content) as List;
 
-    return jsonList.map((e) => Task.fromJson(e)).toList();
+    return jsonList.map(_decode).toList();
   }
 
   @override
-  Future<void> addItems(List<Task> items) async {
+  Future<void> addItems(List<BaseTask> items) async {
+    final existing = await getAll();
+
+    await saveAll([...existing, ...items]);
+  }
+
+  @override
+  Future<void> saveAll(List<BaseTask> items) async {
     if (!await file.exists()) {
       await file.create(recursive: true);
     }
@@ -37,5 +46,13 @@ class TaskRepository implements RepositoryInterface<Task> {
     final jsonList = items.map((item) => item.toJson()).toList();
 
     await file.writeAsString(jsonEncode(jsonList));
+  }
+
+  BaseTask _decode(dynamic json) {
+    final map = json as Map<String, dynamic>;
+
+    return map['type'] == 'urgent'
+        ? UrgentTask.fromJson(map)
+        : Task.fromJson(map);
   }
 }

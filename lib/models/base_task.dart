@@ -27,4 +27,13 @@ abstract class BaseTask implements JsonSerializable {
 
     return '$title | ${priority.name} | $status | $due';
   }
+
+  Map<String, dynamic> commonFields() {
+    return {
+      'title': title,
+      'priority': priority.name,
+      'dueDate': dueDate?.toIso8601String(),
+      'completed': completed,
+    };
+  }
 }

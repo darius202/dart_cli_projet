@@ -2,20 +2,24 @@ import 'package:dart_cli_projet/exceptions/task_exception.dart';
 import 'package:dart_cli_projet/interfaces/repository_interface.dart';
 import 'package:test/test.dart';
 
+import 'package:dart_cli_projet/models/base_task.dart';
 import 'package:dart_cli_projet/models/task.dart';
 import 'package:dart_cli_projet/enums/priority.dart';
 import 'package:dart_cli_projet/services/task_service.dart';
 
-class FakeRepository implements RepositoryInterface<Task> {
-  List<Task> tasks = [];
+class FakeRepository implements RepositoryInterface<BaseTask> {
+  List<BaseTask> tasks = [];
 
   @override
-  Future<List<Task>> getAll() async {
-    return tasks;
+  Future<List<BaseTask>> getAll() async => tasks;
+
+  @override
+  Future<void> addItems(List<BaseTask> items) async {
+    tasks.addAll(items);
   }
 
   @override
-  Future<void> addItems(List<Task> items) async {
+  Future<void> saveAll(List<BaseTask> items) async {
     tasks = items;
   }
 }

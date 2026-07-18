@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:dart_cli_projet/enums/priority.dart';
 import 'package:dart_cli_projet/exceptions/task_exception.dart';
+import 'package:dart_cli_projet/models/base_task.dart';
 import 'package:dart_cli_projet/models/task.dart';
+import 'package:dart_cli_projet/models/urgent_task.dart';
 import 'package:dart_cli_projet/services/task_service.dart';
 
 class TaskCLI {
@@ -63,49 +65,71 @@ class TaskCLI {
     stdout.write('Titre : ');
     final title = stdin.readLineSync()!;
 
-    stdout.write('Priorité (low, medium, high) : ');
-    final priorityInput = stdin.readLineSync()!;
-
-    Priority priority;
-
-    switch (priorityInput.toLowerCase()) {
-      case 'low':
-        priority = Priority.low;
-        break;
-      case 'medium':
-        priority = Priority.medium;
-        break;
-      case 'high':
-        priority = Priority.high;
-        break;
-      default:
-        print('Priorité invalide.');
-        return;
-    }
+    stdout.write('Priorité (low, medium, high, urgent) : ');
+    final priorityInput = stdin.readLineSync() ?? '';
 
     stdout.write('Date limite (yyyy-mm-dd) ou vide : ');
     final dateInput = stdin.readLineSync();
 
-    DateTime? dueDate;
+    try {
+      final dueDate = _parseDueDate(dateInput);
+      final task = _buildTask(title, priorityInput, dueDate);
 
-    if (dateInput != null && dateInput.isNotEmpty) {
-      dueDate = DateTime.tryParse(dateInput);
+      await service.add(task);
 
-      if (dueDate == null) {
-        print('Date invalide.');
-        return;
-      }
+      print('Tâche ajoutée.');
+    } on TaskException catch (e) {
+      print('Erreur : $e');
+    }
+  }
+
+  BaseTask _buildTask(String title, String priorityInput, DateTime? dueDate) {
+    if (priorityInput.toLowerCase() == 'urgent') {
+      return UrgentTask(title: title, dueDate: dueDate);
     }
 
-    await service.add(
-      Task(
-        title: title,
-        priority: priority,
-        dueDate: dueDate,
-      ),
+    return Task(
+      title: title,
+      priority: _parsePriority(priorityInput),
+      dueDate: dueDate,
     );
+  }
 
-    print('Tâche ajoutée.');
+  Priority _parsePriority(String input) {
+    switch (input.toLowerCase()) {
+      case 'low':
+        return Priority.low;
+      case 'medium':
+        return Priority.medium;
+      case 'high':
+        return Priority.high;
+      default:
+        throw InvalidPriorityException();
+    }
+  }
+
+  DateTime? _parseDueDate(String? input) {
+    if (input == null || input.isEmpty) {
+      return null;
+    }
+
+    final date = DateTime.tryParse(input);
+
+    if (date == null) {
+      throw InvalidDateException();
+    }
+
+    return date;
+  }
+
+  int _parseIndex(String? input) {
+    final index = int.tryParse(input ?? '');
+
+    if (index == null) {
+      throw InvalidIndexException('Index invalide.');
+    }
+
+    return index;
   }
 
   Future<void> listTasks() async {
@@ -140,16 +164,13 @@ class TaskCLI {
 
   Future<void> completeTask() async {
     stdout.write('Index de la tâche : ');
-
-    final index = int.tryParse(stdin.readLineSync() ?? '');
-
-    if (index == null) {
-      print('Index invalide.');
-      return;
-    }
+    final input = stdin.readLineSync();
 
     try {
+      final index = _parseIndex(input);
+
       await service.complete(index);
+
       print('Tâche terminée.');
     } on TaskException catch (e) {
       print('Erreur : $e');
@@ -158,16 +179,13 @@ class TaskCLI {
 
   Future<void> deleteTask() async {
     stdout.write('Index de la tâche : ');
-
-    final index = int.tryParse(stdin.readLineSync() ?? '');
-
-    if (index == null) {
-      print('Index invalide.');
-      return;
-    }
+    final input = stdin.readLineSync();
 
     try {
+      final index = _parseIndex(input);
+
       await service.delete(index);
+
       print('Tâche supprimée.');
     } on TaskException catch (e) {
       print('Erreur : $e');

@@ -4,6 +4,7 @@ import 'package:test/test.dart';
 
 import 'package:dart_cli_projet/enums/priority.dart';
 import 'package:dart_cli_projet/models/task.dart';
+import 'package:dart_cli_projet/models/urgent_task.dart';
 import 'package:dart_cli_projet/repositories/task_repository.dart';
 
 void main() {
@@ -40,19 +41,7 @@ void main() {
     expect(content, contains('Apprendre Dart'));
   });
 
-  test('les données survivent à la recréation du repository (redémarrage)',
-      () async {
-    await TaskRepository(path: path).addItems([
-      Task(title: 'Persister', priority: Priority.medium),
-    ]);
-
-    final tasks = await TaskRepository(path: path).getAll();
-
-    expect(tasks.length, 1);
-    expect(tasks.first.title, 'Persister');
-  });
-
-  test('addItems remplace entièrement le contenu précédent', () async {
+  test('addItems ajoute aux tâches déjà présentes sans les écraser', () async {
     final repository = TaskRepository(path: path);
 
     await repository.addItems([
@@ -65,7 +54,55 @@ void main() {
 
     final tasks = await repository.getAll();
 
+    expect(tasks.length, 2);
+    expect(tasks.map((t) => t.title),
+        containsAll(['Première tâche', 'Deuxième tâche']));
+  });
+
+  test('saveAll remplace entièrement le contenu précédent', () async {
+    final repository = TaskRepository(path: path);
+
+    await repository.addItems([
+      Task(title: 'Première tâche', priority: Priority.low),
+    ]);
+
+    await repository.saveAll([
+      Task(title: 'Deuxième tâche', priority: Priority.high),
+    ]);
+
+    final tasks = await repository.getAll();
+
     expect(tasks.length, 1);
     expect(tasks.first.title, 'Deuxième tâche');
+  });
+
+  test('les données survivent à la recréation du repository (redémarrage)',
+      () async {
+    await TaskRepository(path: path).addItems([
+      Task(title: 'Persister', priority: Priority.medium),
+    ]);
+
+    final tasks = await TaskRepository(path: path).getAll();
+
+    expect(tasks.length, 1);
+    expect(tasks.first.title, 'Persister');
+  });
+
+  test('getAll restitue le bon type concret (Task vs UrgentTask)', () async {
+    final repository = TaskRepository(path: path);
+
+    await repository.addItems([
+      Task(title: 'Tâche normale', priority: Priority.low),
+      UrgentTask(title: 'Tâche urgente'),
+    ]);
+
+    final tasks = await repository.getAll();
+
+    final normal = tasks.firstWhere((t) => t.title == 'Tâche normale');
+    final urgent = tasks.firstWhere((t) => t.title == 'Tâche urgente');
+
+    expect(normal, isA<Task>());
+    expect(urgent, isA<UrgentTask>());
+    expect(urgent.priority, Priority.high);
   });
 }

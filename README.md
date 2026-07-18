@@ -18,7 +18,7 @@ L'application fonctionne entièrement en ligne de commande et permet à un utili
 - Supprimer une tâche
 - Persistance des données dans `data/tasks.json`
 
-Priorités disponibles : `low`, `medium`, `high`.
+Priorités disponibles : `low`, `medium`, `high`, ou `urgent` (crée une `UrgentTask` à priorité haute imposée).
 
 ## Prérequis
 
@@ -73,27 +73,27 @@ Ces mêmes vérifications, ainsi que la suite de tests, sont exécutées automat
 lib/
 ├── cli/                 # Boucle d'interaction en ligne de commande (TaskCLI)
 ├── enums/               # Enumération Priority
-├── exceptions/          # Exceptions personnalisées (TaskException)
+├── exceptions/          # Exceptions personnalisées (TaskException et sous-types)
 ├── interfaces/          # Contrats (JsonSerializable, RepositoryInterface<T>)
-├── models/              # BaseTask (abstraite) -> Task -> UrgentTask
-├── repositories/        # Persistance JSON (TaskRepository)
+├── models/              # BaseTask (abstraite) -> Task / UrgentTask
+├── repositories/        # Persistance JSON polymorphe (TaskRepository)
 └── services/            # Logique métier (TaskService)
 ```
 
 Concepts Dart mis en pratique :
 
-- **Classe abstraite** : `BaseTask` définit le contrat commun à toute tâche.
-- **Héritage** : `Task` étend `BaseTask`, `UrgentTask` étend `Task` (priorité haute imposée).
-- **Interfaces** : `JsonSerializable` (sérialisation) et `RepositoryInterface<T>` (persistance générique).
-- **Génériques** : `RepositoryInterface<T>` / `TaskRepository implements RepositoryInterface<Task>`.
-- **Exceptions personnalisées** : `TaskException`, levée par `TaskService` et interceptée par `TaskCLI` pour afficher un message clair sans faire planter l'application.
-- **Tests unitaires** : modèles, service (cas nominaux et cas d'erreur) et persistance réelle du `TaskRepository` sur disque.
+- **Classe abstraite** : `BaseTask` définit le contrat commun à toute tâche (`title`, `priority`, `dueDate`, `completed`, `markAsCompleted()`, `describe()`).
+- **Héritage** : `Task` et `UrgentTask` étendent toutes les deux directement `BaseTask`. `UrgentTask` impose `Priority.high` dans son constructeur et redéfinit `describe()` (polymorphisme : `TaskCLI.listTasks` appelle `describe()` sans savoir s'il a affaire à un `Task` ou un `UrgentTask`).
+- **Interfaces** : `Task` et `UrgentTask` implémentent chacune explicitement `JsonSerializable` (sérialisation propre à chaque type concret) ; `TaskRepository` implémente `RepositoryInterface<BaseTask>` (persistance générique).
+- **Génériques** : `RepositoryInterface<T>` définit un contrat réutilisable pour n'importe quel type sérialisable ; `TaskRepository` l'instancie avec `BaseTask`.
+- **Exceptions personnalisées** : hiérarchie `TaskException` → `TaskNotFoundException`, `InvalidIndexException`, `InvalidPriorityException`, `InvalidDateException`. Chaque point de saisie ou de recherche invalide dans `TaskService`/`TaskCLI` lève le sous-type approprié, capturé de façon uniforme par `TaskCLI` (`on TaskException catch (e)`) pour afficher un message clair sans jamais faire planter l'application.
+- **Tests unitaires** : modèles (`Task`, `UrgentTask`), service (cas nominaux, tri, cas d'erreur) et persistance réelle du `TaskRepository` sur disque (y compris le typage polymorphe à la relecture).
 
 ### Pourquoi ces choix
 
-- **Repository + Service** : `TaskRepository` isole entièrement la lecture/écriture du fichier JSON derrière `RepositoryInterface<Task>`. `TaskService` ne connaît que ce contrat, pas le détail du stockage. En pratique, cela permet de tester `TaskService` avec un `FakeRepository` en mémoire (voir `test/task_service_test.dart`) sans toucher au disque, tout en gardant un test dédié pour la vraie persistance (`test/task_repository_test.dart`).
-- **`addItems` remplace toute la liste** : le contrat `RepositoryInterface<T>.addItems` réécrit l'intégralité du fichier avec la liste fournie plutôt que d'ajouter des éléments. `TaskService` récupère toujours la liste complète via `getAll()`, la modifie en mémoire, puis la repasse en entier à `addItems`. C'est une persistance simple, sans dépendances externes, adaptée au volume de données d'une todo-list personnelle.
-- **`UrgentTask`** impose `Priority.high` dès la construction : il illustre l'héritage en spécialisant `Task` (mêmes champs, contrainte métier en plus) plutôt qu'en dupliquant du code.
+- **Repository + Service** : `TaskRepository` isole entièrement la lecture/écriture du fichier JSON derrière `RepositoryInterface<BaseTask>`. `TaskService` ne connaît que ce contrat, pas le détail du stockage. Cela permet de tester `TaskService` avec un `FakeRepository` en mémoire (voir `test/task_service_test.dart`) sans toucher au disque, tout en gardant un test dédié pour la vraie persistance (`test/task_repository_test.dart`).
+- **`addItems` vs `saveAll`** : le contrat expose deux opérations distinctes et sans ambiguïté — `addItems` *ajoute* les éléments fournis aux données déjà persistées (utilisé par `TaskService.add`), `saveAll` *remplace* l'intégralité du contenu par la liste fournie (utilisé par `complete`/`delete`, qui doivent réécrire l'état complet après une mutation en mémoire).
+- **`Task` et `UrgentTask` comme sœurs sous `BaseTask`** : chacune implémente son propre `toJson`/`fromJson` (via un champ `type` discriminant dans le JSON), ce qui permet à `TaskRepository.getAll()` de reconstruire le bon type concret à la lecture — démonstration explicite du polymorphisme plutôt qu'une simple spécialisation en chaîne.
 
 ### Limites connues et pistes d'amélioration
 
